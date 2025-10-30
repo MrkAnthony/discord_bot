@@ -1,3 +1,9 @@
+'''
+TODO:
+Add a check so that people who are already in queue cannot join another queue unless they leave
+Add the logic for matching into a room with problem
+'''
+
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -34,6 +40,7 @@ queue = {
 active_interviews = {}
 
 
+# Ensuring that bot is online
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} I am ready to facilitate learning')
@@ -55,7 +62,7 @@ async def on_ready():
     app_commands.Choice(name='Random', value='random')
     # Joining Queue Mechanism
 ])
-# Joining Queue command
+# joining mock interview queue: /join-queue
 async def join_queue(interaction: discord.Interaction, difficulty: app_commands.Choice[str]):
     user = interaction.user
     diff = difficulty.value
@@ -69,15 +76,16 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         )
         return
 
-    for queue_list in queue.values():
+    for queue_name, queue_list in queue.items():
+        display_name = difficulty.name
         if user in queue_list:
             await interaction.response.send_message(
-                "You're already in a queue!", ephemeral=True
+                f"You're already in the queue! Use `/leave-queue` to leave first.",
+                ephemeral=True
             )
             return
 
     if diff == "random":
-        queue['random'].append(user)
         diff = random.choice(['easy', 'medium', 'hard'])
         chosen_name = diff.capitalize()
         await interaction.response.send_message(
@@ -97,11 +105,10 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         )
 
     queue[diff].append(user)
-
     await try_match(interaction.guild, diff)
 
 
-# Drop command
+# Drop the queue command: /leave-queue
 @bot.tree.command(name="leave-queue", description="Leave the interview queue")
 async def leave_queue(interaction: discord.Interaction):
     user = interaction.user
@@ -135,12 +142,23 @@ async def try_match(guild, difficulty):
 
 
 async def create_interview_room(guild, user1, user2, difficulty):
-    print(f"Creating interview room {difficulty}")
+    INTERVIEW_ROOM_CATEGORY_ID = 1433269372255731874
+    category = guild.get_channel(INTERVIEW_ROOM_CATEGORY_ID)
 
+    if not category:
+        print("This wasn't found")
+
+    overwrite = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),  # Hide from everyone
+        user1: discord.PermissionOverwrite(view_channel=True, connect=True),   # Allow user1
+        user2: discord.PermissionOverwrite(view_channel=True, connect=True),   # Allow user2
+        guild.me: discord.PermissionOverwrite(view_channel=True, connect=True, move_members=True)  # Bot permissions
+    }
 
 @bot.event
 async def on_member_join(member):
-    await member.send(f"Welcome to the server {member.name}")
+    await member.send(
+        f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started!")
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
