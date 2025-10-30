@@ -1,0 +1,59 @@
+# --- Environment Files ---
+.env
+
+# --- Log Files ---
+*.log
+discord.log
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- PyCharm / JetBrains ---
+.idea/
+
+# --- Python Caches ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual Environments ---
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Build and Distribution ---
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# --- Unit Test / Coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- Temporary / Backup Files ---
+*.tmp
+*.bak
+*.swp
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+
+# --- MyPy / Pyre / Type Checking ---
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# --- IDE Helper Files ---
+*.iml
