@@ -1,7 +1,8 @@
 '''
 TODO:
-Add a check so that people who are already in queue cannot join another queue unless they leave
-Add the logic for matching into a room with problem
+1. Cleaning up the room after someone leaves
+2. Providing questions from Neetcode 150 (2 questions each with link and name of the problem)
+3. and assigning random roles (Interviewer or Candidate)
 '''
 
 import discord
@@ -88,6 +89,9 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
     if diff == "random":
         diff = random.choice(['easy', 'medium', 'hard'])
         chosen_name = diff.capitalize()
+
+        queue[diff].append(user)
+
         await interaction.response.send_message(
             f"🎲 Random difficulty chosen: **{chosen_name}**\n"
             f"✅ You've joined the **{chosen_name}** queue!\n"
@@ -97,14 +101,13 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         )
     else:
         display_name = difficulty.name
+        queue[diff].append(user)
         await interaction.response.send_message(
             f"You've joined the **{display_name}** queue!\n"
             f"👥 Currently {len(queue[diff])} people waiting.\n"
             f"You'll be notified when matched!",
             ephemeral=True
         )
-
-    queue[diff].append(user)
     await try_match(interaction.guild, diff)
 
 
@@ -114,6 +117,13 @@ async def leave_queue(interaction: discord.Interaction):
     user = interaction.user
 
     ALLOWED_CHANNEL = 1433269455500087297
+
+    if interaction.channel.id != ALLOWED_CHANNEL:
+        await interaction.response.send_message(
+            f"Please use this command in #find-partner!",
+            ephemeral=True
+        )
+        return
 
     # Search through all queues
     for diff, queue_list in queue.items():
@@ -142,18 +152,65 @@ async def try_match(guild, difficulty):
 
 
 async def create_interview_room(guild, user1, user2, difficulty):
-    INTERVIEW_ROOM_CATEGORY_ID = 1433269372255731874
+    INTERVIEW_ROOM_CATEGORY_ID = 1433270003419058279
     category = guild.get_channel(INTERVIEW_ROOM_CATEGORY_ID)
 
     if not category:
         print("This wasn't found")
+        return None
 
     overwrite = {
         guild.default_role: discord.PermissionOverwrite(view_channel=False),  # Hide from everyone
-        user1: discord.PermissionOverwrite(view_channel=True, connect=True),   # Allow user1
-        user2: discord.PermissionOverwrite(view_channel=True, connect=True),   # Allow user2
+        user1: discord.PermissionOverwrite(view_channel=True, connect=True),  # Allow user1
+        user2: discord.PermissionOverwrite(view_channel=True, connect=True),  # Allow user2
         guild.me: discord.PermissionOverwrite(view_channel=True, connect=True, move_members=True)  # Bot permissions
     }
+
+    try:
+        interview_channel = await guild.create_voice_channel(
+            name=f"mock interview - {difficulty}",
+            category=category,
+            overwrites=overwrite,
+            reason=f"mock interview room for {user1.name} and {user2.name}"
+        )
+
+        print(f"The {interview_channel} was created")
+
+        if user1.voice:
+            await user1.move_to(interview_channel)
+            print(f"{user1.name} was moved to interview channel")
+        else:
+            try:
+                await user1.send(f"Interview Ready - Good luck! {interview_channel.mention}")
+            except discord.Forbidden:
+                print(f"Couldn't DM {user1.name} (DMs Disabled)")
+
+        if user2.voice:
+            await user2.move_to(interview_channel)
+            print(f"{user2.name} was moved to interview channel")
+        else:
+            try:
+                await user2.send(f"Interview Ready - Good luck! {interview_channel.mention}")
+            except discord.Forbidden:
+                print(f"Couldn't DM {user2.name} (DMs Disabled)")
+
+        # Store in active interviews for tracking
+        interview_id = f"{user1.id}_{user2.id}"
+        active_interviews[interview_id] = {
+            'channel': interview_channel,
+            'users': [user1, user2],
+            'difficulty': difficulty,
+            'start_time': discord.utils.utcnow()
+        }
+        return interview_channel
+
+    except discord.Forbidden:
+        print("Bot lacks permission to create channels or move members")
+        return None
+    except Exception as e:
+        print(f"Error creating interview room: {e}")
+        return None
+
 
 @bot.event
 async def on_member_join(member):
