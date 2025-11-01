@@ -1,9 +1,9 @@
-'''
+"""
 TODO:
-1. Cleaning up the room after someone leaves
+1. Cleaning up the room after someone leaves (Testing)
 2. Providing questions from Neetcode 150 (2 questions each with link and name of the problem)
 3. and assigning random roles (Interviewer or Candidate)
-'''
+"""
 
 import discord
 from discord.ext import commands
@@ -78,7 +78,6 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         return
 
     for queue_name, queue_list in queue.items():
-        display_name = difficulty.name
         if user in queue_list:
             await interaction.response.send_message(
                 f"You're already in the queue! Use `/leave-queue` to leave first.",
@@ -94,18 +93,20 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
 
         await interaction.response.send_message(
             f"🎲 Random difficulty chosen: **{chosen_name}**\n"
-            f"✅ You've joined the **{chosen_name}** queue!\n"
-            f"👥 Currently {len(queue[diff])} people waiting.\n"
-            f"You'll be notified when matched!",
+            f"✅ You’ve successfully joined the **{chosen_name}** interview queue!\n"
+            f"👥 Currently {len(queue[diff]) + 1} participants waiting.\n"
+            f"Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n",
+            f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
             ephemeral=True
         )
     else:
         display_name = difficulty.name
         queue[diff].append(user)
         await interaction.response.send_message(
-            f"You've joined the **{display_name}** queue!\n"
-            f"👥 Currently {len(queue[diff])} people waiting.\n"
-            f"You'll be notified when matched!",
+            f"You’ve successfully joined the **{display_name}** interview queue!\n"
+            f"👥 Currently {len(queue[diff]) + 1} participants waiting.\n"
+            f"💬 Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n",
+            f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
             ephemeral=True
         )
     await try_match(interaction.guild, diff)
@@ -210,6 +211,43 @@ async def create_interview_room(guild, user1, user2, difficulty):
     except Exception as e:
         print(f"Error creating interview room: {e}")
         return None
+
+
+async def end_interview_room(channel, interview_id):
+    try:
+        if interview_id in active_interviews:
+            del active_interviews[interview_id]
+            print(f"Removed from interview room: {interview_id}")
+
+        await channel.delete(reason="Interview ended - a participate left")
+        print(f"Deleting Interview Room {channel.name}")
+    except Exception as e:
+        print(f"Error deleting interview room: {e}")
+
+# YOU GOT TO TEST THIS BEFORE PUSHING
+@bot.event
+# Detect when interview participants leave and end the interview
+async def on_voice_status_end(member, before, after):
+    # member = the user who had a voice state change
+    # before = their voice state BEFORE the change
+    # after = their voice state AFTER the change
+    if before.channel and (not after.channel or before.channel.id != after.channel.id):
+        channel = before.channel
+
+        if channel.name.startswith("mock interview"):
+            print(f"{member.name} left the channel {member.name}")
+
+            for interview_id, data in list(active_interviews.items()):
+                if data['channel'].id == channel.id and member in data['users']:  #NOTE (member condition is redudant)
+                    print(f"Participant {member.name} has left the interview - waiting 15 seconds")
+                    await asyncio.sleep(15)  # A small grace period if someone disconnects
+
+                try:
+                    if member not in channel.members:
+                        await end_interview_room(channel, interview_id)
+                except discord.NotFound:
+                    print("This channel is long gone")
+                break
 
 
 @bot.event
