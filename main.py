@@ -93,20 +93,19 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
 
         await interaction.response.send_message(
             f"🎲 Random difficulty chosen: **{chosen_name}**\n"
-            f"✅ You’ve successfully joined the **{chosen_name}** interview queue!\n"
+            f"✅ You've successfully joined the **{chosen_name}** interview queue!\n"
             f"👥 Currently {len(queue[diff])} participants waiting.\n"
-            f"Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n"
-            f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
+            f"Once matched, a private interview text + voice channel will be created for you!",
             ephemeral=True
         )
     else:
         display_name = difficulty.name
         queue[diff].append(user)
         await interaction.response.send_message(
-            f"You’ve successfully joined the **{display_name}** interview queue!\n"
+            f"🎲 Random difficulty chosen: **{display_name}**\n"
+            f"✅ You've successfully joined the **{display_name}** interview queue!\n"
             f"👥 Currently {len(queue[diff])} participants waiting.\n"
-            f"💬 Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n"
-            f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
+            f"Once matched, a private interview text + voice channel will be created for you!",
             ephemeral=True
         )
     await try_match(interaction.guild, diff)
