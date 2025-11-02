@@ -1,6 +1,5 @@
 """
 TODO:
-1. Cleaning up the room after someone leaves (Testing)
 2. Providing questions from Neetcode 150 (2 questions each with link and name of the problem)
 3. and assigning random roles (Interviewer or Candidate)
 """
@@ -12,6 +11,7 @@ import random
 import asyncio
 import logging
 from dotenv import load_dotenv
+from neetcode_list import NEETCODE_LIST
 import os
 
 load_dotenv()
@@ -168,15 +168,63 @@ async def create_interview_room(guild, user1, user2, difficulty):
     }
 
     try:
+
+        text_channel = await guild.create_text_channel(
+            name=f"interview-{difficulty}",
+            category=category,
+            overwrites=overwrite,
+            reason=f"Mock interview text channel for {user1.name} and {user2.name}"
+        )
         interview_channel = await guild.create_voice_channel(
             name=f"mock interview - {difficulty}",
             category=category,
             overwrites=overwrite,
             reason=f"mock interview room for {user1.name} and {user2.name}"
         )
+        # Problems from neetcode dict
+        problems = random.sample(NEETCODE_LIST[difficulty], 2)
+
+        # Randomly assigning roles
+        roles = random.sample([user1, user2], 2)
+        interviewer_first = roles[0]
+        candidate_first = roles[1]
+
+        message = f"""
+            🎯 **Mock Interview - {difficulty.capitalize()}**
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            👥 **Participants:**
+            - {interviewer_first.mention}
+            - {candidate_first.mention}
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            📝 **Round 1**
+            **Interviewer:** {interviewer_first.mention}
+            **Candidate:** {candidate_first.mention}
+            **Problem:** [{problems[0]['name']}]({problems[0]['link']})
+            
+            📝 **Round 2**
+            **Interviewer:** {candidate_first.mention}
+            **Candidate:** {interviewer_first.mention}
+            **Problem:** [{problems[1]['name']}]({problems[1]['link']})
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            💡 **Guidelines:**
+            - Interviewers: Only look at YOUR problem
+            - Suggested time: 30-45 minutes per round
+            - Switch roles after Round 1
+            
+            🎙️ **Voice Channel:** {interview_channel.mention}
+            """
+
+        await text_channel.send(message)
 
         print(f"The {interview_channel} was created")
-
+        # Commented it out to test if it's better to just have a temp text channel or have the bot DM personally
+        '''
         if user1.voice:
             await user1.move_to(interview_channel)
             print(f"{user1.name} was moved to interview channel")
@@ -194,11 +242,13 @@ async def create_interview_room(guild, user1, user2, difficulty):
                 await user2.send(f"Interview Ready - Good luck! {interview_channel.mention}")
             except discord.Forbidden:
                 print(f"Couldn't DM {user2.name} (DMs Disabled)")
+        '''
 
         # Store in active interviews for tracking
         interview_id = f"{user1.id}_{user2.id}"
         active_interviews[interview_id] = {
             'channel': interview_channel,
+            'text': text_channel,
             'users': [user1, user2],
             'difficulty': difficulty,
             'start_time': discord.utils.utcnow()
@@ -213,19 +263,24 @@ async def create_interview_room(guild, user1, user2, difficulty):
         return None
 
 
-async def end_interview_room(channel, interview_id):
+async def end_interview_room(interview_id):
     try:
         if interview_id in active_interviews:
-            del active_interviews[interview_id]
-            print(f"Removed from interview room: {interview_id}")
+            data = active_interviews[interview_id]
 
-        await channel.delete(reason="Interview ended - a participate left")
-        print(f"Deleting Interview Room {channel.name}")
+            voice_channel = data['channel']
+            text_channel = data['text']
+
+            await voice_channel.delete(reason=f"Interview Ended - a participant left")
+            print(f"the voice channel was deleted successfully: {voice_channel.name}")
+
+            await text_channel.delete(reason=f"Interview Ended - a participant left")
+            print(f"the text channel was deleted successfully: {text_channel.name}")
+
     except Exception as e:
         print(f"Error deleting interview room: {e}")
 
 
-# YOU GOT TO TEST THIS BEFORE PUSHING
 @bot.event
 # Detect when interview participants leave and end the interview
 async def on_voice_state_update(member, before, after):
@@ -245,7 +300,7 @@ async def on_voice_state_update(member, before, after):
 
                     try:
                         if member not in channel.members:
-                            await end_interview_room(channel, interview_id)
+                            await end_interview_room(interview_id)
                     except discord.NotFound:
                         print("This channel is long gone")
                     break
