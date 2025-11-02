@@ -94,8 +94,8 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         await interaction.response.send_message(
             f"🎲 Random difficulty chosen: **{chosen_name}**\n"
             f"✅ You’ve successfully joined the **{chosen_name}** interview queue!\n"
-            f"👥 Currently {len(queue[diff]) + 1} participants waiting.\n"
-            f"Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n",
+            f"👥 Currently {len(queue[diff])} participants waiting.\n"
+            f"Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n"
             f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
             ephemeral=True
         )
@@ -104,8 +104,8 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
         queue[diff].append(user)
         await interaction.response.send_message(
             f"You’ve successfully joined the **{display_name}** interview queue!\n"
-            f"👥 Currently {len(queue[diff]) + 1} participants waiting.\n"
-            f"💬 Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n",
+            f"👥 Currently {len(queue[diff])} participants waiting.\n"
+            f"💬 Once you’re matched, you’ll **receive a direct message (DM)** from the bot with a link to **join your private interview room.**\n"
             f"⚠️ Make sure your DMs are open so you don’t miss the notification!",
             ephemeral=True
         )
@@ -224,10 +224,11 @@ async def end_interview_room(channel, interview_id):
     except Exception as e:
         print(f"Error deleting interview room: {e}")
 
+
 # YOU GOT TO TEST THIS BEFORE PUSHING
 @bot.event
 # Detect when interview participants leave and end the interview
-async def on_voice_status_end(member, before, after):
+async def on_voice_state_update(member, before, after):
     # member = the user who had a voice state change
     # before = their voice state BEFORE the change
     # after = their voice state AFTER the change
@@ -242,12 +243,12 @@ async def on_voice_status_end(member, before, after):
                     print(f"Participant {member.name} has left the interview - waiting 15 seconds")
                     await asyncio.sleep(15)  # A small grace period if someone disconnects
 
-                try:
-                    if member not in channel.members:
-                        await end_interview_room(channel, interview_id)
-                except discord.NotFound:
-                    print("This channel is long gone")
-                break
+                    try:
+                        if member not in channel.members:
+                            await end_interview_room(channel, interview_id)
+                    except discord.NotFound:
+                        print("This channel is long gone")
+                    break
 
 
 @bot.event
