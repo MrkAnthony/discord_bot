@@ -189,36 +189,36 @@ async def create_interview_room(guild, user1, user2, difficulty):
         interviewer_first = roles[0]
         candidate_first = roles[1]
 
-        message = f"""
-            🎯 **Mock Interview - {difficulty.capitalize()}**
-            
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            
-            👥 **Participants:**
-            - {interviewer_first.mention}
-            - {candidate_first.mention}
-            
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            
-            📝 **Round 1**
-            **Interviewer:** {interviewer_first.mention}
-            **Candidate:** {candidate_first.mention}
-            **Problem:** [{problems[0]['name']}]({problems[0]['link']})
-            
-            📝 **Round 2**
-            **Interviewer:** {candidate_first.mention}
-            **Candidate:** {interviewer_first.mention}
-            **Problem:** [{problems[1]['name']}]({problems[1]['link']})
-            
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            
-            💡 **Guidelines:**
-            - Interviewers: Only look at YOUR problem
-            - Suggested time: 30-45 minutes per round
-            - Switch roles after Round 1
-            
-            🎙️ **Voice Channel:** {interview_channel.mention}
-            """
+        message = f"""\
+        🎯 **Mock Interview - {difficulty.capitalize()}**
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        👥 **Participants:**
+        {interviewer_first.mention}
+        {candidate_first.mention}
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        📝 **Round 1**
+        **Interviewer:** {interviewer_first.mention}  
+        **Candidate:** {candidate_first.mention}  
+        **Problem:** [{problems[0]['name']}]({problems[0]['link']})
+        
+        📝 **Round 2**
+        **Interviewer:** {candidate_first.mention}  
+        **Candidate:** {interviewer_first.mention}  
+        **Problem:** [{problems[1]['name']}]({problems[1]['link']})
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        💡 **Guidelines:**
+        Interviewers: Only look at **your** problem  
+        Suggested time: 30–45 minutes per round  
+        Switch roles after Round 1  
+        
+        🎙️ **Voice Channel:** {interview_channel.mention}
+        """.strip()
 
         await text_channel.send(message)
 
@@ -296,7 +296,7 @@ async def on_voice_state_update(member, before, after):
             for interview_id, data in list(active_interviews.items()):
                 if data['channel'].id == channel.id and member in data['users']:  #NOTE (member condition is redudant)
                     print(f"Participant {member.name} has left the interview - waiting 15 seconds")
-                    await asyncio.sleep(15)  # A small grace period if someone disconnects
+                    await asyncio.sleep(25)  # A small grace period if someone disconnects
 
                     try:
                         if member not in channel.members:
