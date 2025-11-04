@@ -1,5 +1,5 @@
 # --- Environment Files ---
-.env
+*.env
 
 # --- Log Files ---
 *.log

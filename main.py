@@ -279,7 +279,6 @@ async def end_interview_room(interview_id):
     except Exception as e:
         print(f"Error deleting interview room: {e}")
 
-
 @bot.event
 # Detect when interview participants leave and end the interview
 async def on_voice_state_update(member, before, after):
@@ -299,11 +298,68 @@ async def on_voice_state_update(member, before, after):
 
                     try:
                         if member not in channel.members:
+                            print(f"{member.name} did not rejoin within 25s — ending interview.")
                             await end_interview_room(interview_id)
+
+                            difficulty = data['difficulty']
+                            remaining_user = next((u for u in data['users'] if u != member), None)
+
+                            if remaining_user:
+                                # Disconnect the remaining user if still connected
+                                if remaining_user.voice and remaining_user.voice.channel:
+                                    try:
+                                        await remaining_user.move_to(None)
+                                        print(f"{remaining_user.name} has been removed from the voice channel after partner left.")
+                                    except discord.Forbidden:
+                                        print(f"Cannot disconnect {remaining_user.name} — missing permissions.")
+
+                                # Send an interactive DM using inline view and buttons
+                                try:
+                                    view = discord.ui.View(timeout=30)
+
+                                    # ✅ Yes Button
+                                    async def yes_callback(interaction: discord.Interaction):
+                                        queue[difficulty].append(remaining_user)
+                                        await interaction.response.edit_message(
+                                            content=f"✅ You’ve been requeued in the **{difficulty.capitalize()}** queue!",
+                                            view=None
+                                        )
+                                        print(f"{remaining_user.name} rejoined the {difficulty} queue.")
+                                        await try_match(channel.guild, difficulty)
+
+                                    # ❌ No Button
+                                    async def no_callback(interaction: discord.Interaction):
+                                        await interaction.response.edit_message(
+                                            content="👌 No problem — you’ve not been requeued.",
+                                            view=None
+                                        )
+                                        print(f"{remaining_user.name} chose not to rejoin the queue.")
+
+                                    # Add both buttons to the View
+                                    yes_button = discord.ui.Button(label="✅ Yes, rejoin", style=discord.ButtonStyle.success)
+                                    no_button = discord.ui.Button(label="❌ No, thanks", style=discord.ButtonStyle.danger)
+
+                                    yes_button.callback = yes_callback
+                                    no_button.callback = no_callback
+
+                                    view.add_item(yes_button)
+                                    view.add_item(no_button)
+
+                                    await remaining_user.send(
+                                        f"😔 Your interview partner **{member.name}** left the session and the room has been closed.\n\n"
+                                        f"Would you like to **rejoin the {difficulty.capitalize()} queue** to find a new partner?",
+                                        view=view
+                                    )
+
+                                except discord.Forbidden:
+                                    print(f"Could not DM {remaining_user.name}, DMs disabled.")
+
+                            # Clean up from active_interviews
+                            del active_interviews[interview_id]
+                            
                     except discord.NotFound:
                         print("This channel is long gone")
                     break
-
 
 @bot.event
 async def on_member_join(member):
