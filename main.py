@@ -15,7 +15,18 @@ from neetcode_list import NEETCODE_LIST
 import os
 
 load_dotenv()
-token = os.getenv('DISCORD_TOKEN')
+# Railway sets this automatically in production
+IS_PRODUCTION = os.getenv('RAILWAY_ENVIRONMENT') is not None
+if IS_PRODUCTION:
+    token = os.getenv('DISCORD_TOKEN')
+    ALLOWED_CHANNEL = 1433269455500087297
+    INTERVIEW_ROOM_CATEGORY_ID = 1433270003419058279
+    print("🚀 Running in PRODUCTION mode (Railway)")
+else:
+    token = os.getenv('TESTING_BOT_CODE')
+    ALLOWED_CHANNEL = 1436017919418175489
+    INTERVIEW_ROOM_CATEGORY_ID = 1436017919418175492
+    print("🧪 Running in DEVELOPMENT mode (Local)")
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 intents = discord.Intents.default()
@@ -68,8 +79,6 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
     user = interaction.user
     diff = difficulty.value
 
-    ALLOWED_CHANNEL = 1433269455500087297  # Channel Find-Partner
-
     if interaction.channel.id != ALLOWED_CHANNEL:
         await interaction.response.send_message(
             f"Please use this command in #find-partner!",
@@ -116,8 +125,6 @@ async def join_queue(interaction: discord.Interaction, difficulty: app_commands.
 async def leave_queue(interaction: discord.Interaction):
     user = interaction.user
 
-    ALLOWED_CHANNEL = 1433269455500087297
-
     if interaction.channel.id != ALLOWED_CHANNEL:
         await interaction.response.send_message(
             f"Please use this command in #find-partner!",
@@ -152,7 +159,6 @@ async def try_match(guild, difficulty):
 
 
 async def create_interview_room(guild, user1, user2, difficulty):
-    INTERVIEW_ROOM_CATEGORY_ID = 1433270003419058279
     category = guild.get_channel(INTERVIEW_ROOM_CATEGORY_ID)
 
     if not category:
@@ -279,6 +285,7 @@ async def end_interview_room(interview_id):
     except Exception as e:
         print(f"Error deleting interview room: {e}")
 
+
 @bot.event
 # Detect when interview participants leave and end the interview
 async def on_voice_state_update(member, before, after):
@@ -293,7 +300,7 @@ async def on_voice_state_update(member, before, after):
 
             for interview_id, data in list(active_interviews.items()):
                 if data['channel'].id == channel.id and member in data['users']:  #NOTE (member condition is redudant)
-                    print(f"Participant {member.name} has left the interview - waiting 15 seconds")
+                    print(f"Participant {member.name} has left the interview - waiting 25 seconds")
                     await asyncio.sleep(25)  # A small grace period if someone disconnects
 
                     try:
@@ -309,7 +316,8 @@ async def on_voice_state_update(member, before, after):
                                 if remaining_user.voice and remaining_user.voice.channel:
                                     try:
                                         await remaining_user.move_to(None)
-                                        print(f"{remaining_user.name} has been removed from the voice channel after partner left.")
+                                        print(
+                                            f"{remaining_user.name} has been removed from the voice channel after partner left.")
                                     except discord.Forbidden:
                                         print(f"Cannot disconnect {remaining_user.name} — missing permissions.")
 
@@ -336,8 +344,10 @@ async def on_voice_state_update(member, before, after):
                                         print(f"{remaining_user.name} chose not to rejoin the queue.")
 
                                     # Add both buttons to the View
-                                    yes_button = discord.ui.Button(label="✅ Yes, rejoin", style=discord.ButtonStyle.success)
-                                    no_button = discord.ui.Button(label="❌ No, thanks", style=discord.ButtonStyle.danger)
+                                    yes_button = discord.ui.Button(label="✅ Yes, rejoin",
+                                                                   style=discord.ButtonStyle.success)
+                                    no_button = discord.ui.Button(label="❌ No, thanks",
+                                                                  style=discord.ButtonStyle.danger)
 
                                     yes_button.callback = yes_callback
                                     no_button.callback = no_callback
@@ -356,10 +366,11 @@ async def on_voice_state_update(member, before, after):
 
                             # Clean up from active_interviews
                             del active_interviews[interview_id]
-                            
+
                     except discord.NotFound:
                         print("This channel is long gone")
                     break
+
 
 @bot.event
 async def on_member_join(member):
