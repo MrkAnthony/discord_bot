@@ -375,7 +375,7 @@ async def on_voice_state_update(member, before, after):
 @bot.event
 async def on_member_join(member):
     await member.send(
-        f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started!")
+        f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started and feel free to introduce yourself in **#introductions**!")
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
