@@ -21,6 +21,7 @@ if IS_PRODUCTION:
     token = os.getenv('DISCORD_TOKEN')
     ALLOWED_CHANNEL = 1433269455500087297
     INTERVIEW_ROOM_CATEGORY_ID = 1433270003419058279
+    YOUR_WELCOME_CHANNEL_ID = 1433268525346062498
     print("🚀 Running in PRODUCTION mode (Railway)")
 else:
     token = os.getenv('TESTING_BOT_CODE')
@@ -372,10 +373,23 @@ async def on_voice_state_update(member, before, after):
                     break
 
 
+# This Function provides a clear welcoming to the user in the channel and via DM
 @bot.event
 async def on_member_join(member):
-    await member.send(
-        f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started and feel free to introduce yourself in **#introductions**!")
+    welcome_channel = bot.get_channel(YOUR_WELCOME_CHANNEL_ID)
+    if welcome_channel:
+        await welcome_channel.send(
+            f"👋 Hey {member.mention}, welcome to Panthers to FAANG! Ready to crush those technical interviews?!"
+        )
+    try:
+        await member.send(
+            f"🎯 Hello once again, {member.name}!\n\n"
+            f"Check **#how-it-works** to get started with mock interviews. When you're ready, hop in the queue and start practicing!\n\n"
+            f"💪 You've got this!"
+        )
+    except discord.Forbidden:
+        print(f"Could not DM {member.name}, DMs disabled.")
+        pass
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
