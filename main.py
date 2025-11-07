@@ -65,6 +65,62 @@ async def on_ready():
         print(f'Failed to sync commands: {e}')
 
 
+# --------------------
+
+#Function for daily question posting / (Mateo Lauzardo)
+async def daily_question():
+    await bot.wait_until_ready()
+    channel_id = 1436017918931501066  # THIS IS THE SPECIFIC CHANNEL ID WHERE THE QUESTIONS WILL BE POSTED
+    channel = bot.get_channel(channel_id)
+    if channel is None or not isinstance(channel, discord.TextChannel):
+        logging.error("Daily channel not found or not a text channel")
+        return
+
+    API_URL = "https://alfa-leetcode-api.onrender.com/daily"
+
+    while not bot.is_closed():
+        try:
+            aiohttp = __import__("aiohttp")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(API_URL, timeout=10) as resp:
+                    if resp.status != 200:
+                        raise RuntimeError("API request failed")
+                    data = await resp.json()
+
+            title = data.get("questionTitle")
+            link = data.get("questionLink")
+            difficulty = data.get("difficulty")
+
+            
+            # message = f"Title: {title}\nLink: {link}\nDifficulty: {difficulty}"
+            # await channel.send(message)
+
+            title_text = title or "Untitled"
+            if link:
+                title_line = f"**Problem:** [{title_text}]({link})"
+            else:
+                title_line = f"**Problem:** {title_text}"
+
+            # diff_text = str(difficulty).capitalize() if difficulty else "Unknown"
+            # message = f"🎯 **Daily Coding Problem**\n\n{title_line}\n**Difficulty:** {diff_text}"
+            # await channel.send(message)
+
+            diff_text = str(difficulty).capitalize() if difficulty else "Unknown"
+            # Title includes difficulty in parentheses
+            title_header = f"🎯 **Daily Coding Problem ({diff_text})** 🎯"
+            message = f"{title_header}\n\n{title_line}"
+            await channel.send(message)
+
+
+        except Exception:
+            logging.exception("Failed to post daily problem")
+
+        await asyncio.sleep(86400)  # 24 hours
+
+
+# --------------------
+
+
 @bot.tree.command(name='join-queue', description="Joining the interview queue")
 @app_commands.describe(difficulty='Choose a difficultly')
 @app_commands.choices(difficulty=[
@@ -377,5 +433,11 @@ async def on_member_join(member):
     await member.send(
         f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started and feel free to introduce yourself in **#introductions**!")
 
+
+if not token:
+    # Fail fast with a clear error if token is missing from environment/.env
+    raise RuntimeError(
+        "Discord token not found. Set DISCORD_TOKEN (production) or TESTING_BOT_CODE (development) in environment or .env"
+    )
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
