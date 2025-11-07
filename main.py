@@ -9,6 +9,7 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import asyncio
+import aiohttp
 import logging
 from dotenv import load_dotenv
 from neetcode_list import NEETCODE_LIST
@@ -40,6 +41,7 @@ intents.voice_states = True
 # Only if using prefix commands
 intents.message_content = True
 
+# creating the bot instance / listen to messages using ! and understands commands
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Storing my users waiting to be matched with someone else
@@ -63,60 +65,111 @@ async def on_ready():
             print(f'  - /{cmd.name}')
     except Exception as e:
         print(f'Failed to sync commands: {e}')
+    # Start the daily question background task once
+    if not getattr(bot, "_daily_question_started", False):
+        bot._daily_question_started = True
+        bot.loop.create_task(daily_question())
+
+
+
+
 
 
 # --------------------
-
-#Function for daily question posting / (Mateo Lauzardo)
+# Function for daily question posting / (Mateo Lauzardo)
 async def daily_question():
+    
+    # dont start doing anything till the robot is online 
     await bot.wait_until_ready()
-    channel_id = 1436017918931501066  # THIS IS THE SPECIFIC CHANNEL ID WHERE THE QUESTIONS WILL BE POSTED
-    channel = bot.get_channel(channel_id)
-    if channel is None or not isinstance(channel, discord.TextChannel):
-        logging.error("Daily channel not found or not a text channel")
+
+    channel_id = 1436017918931501066  
+    channel = bot.get_channel(channel_id) #gives discord bot access to "daily question" channel
+
+    
+    # Test case if channel is None existing 
+    if channel is None:
+        try:
+            channel = await bot.fetch_channel(channel_id)
+        except Exception:
+            logging.exception("Daily channel not found or could not be fetched")
+            return
+
+
+    # If channel isn't a text channel
+    if not isinstance(channel, discord.TextChannel):
+        logging.error("Daily channel is not a text channel")
         return
 
+    
     API_URL = "https://alfa-leetcode-api.onrender.com/daily"
 
+
+    # while loop which runs indefinitely IF the bot is NOT closed
     while not bot.is_closed():
+       
         try:
-            aiohttp = __import__("aiohttp")
+            # simple test case 
+            print("I made it here")
+
+            # "aiohttp.ClientSession()" opens browser session
             async with aiohttp.ClientSession() as session:
-                async with session.get(API_URL, timeout=10) as resp:
-                    if resp.status != 200:
-                        raise RuntimeError("API request failed")
-                    data = await resp.json()
-
-            title = data.get("questionTitle")
-            link = data.get("questionLink")
-            difficulty = data.get("difficulty")
-
+                    
             
-            # message = f"Title: {title}\nLink: {link}\nDifficulty: {difficulty}"
-            # await channel.send(message)
+                # session.get request to get data from the API URL
+                async with session.get(API_URL) as resp:
+                                
+                    if resp.status != 200: # if response is NOT successful / ELSE continue running
+                        
+                        logging.error(f"API returned status {resp.status}")
+                        await asyncio.sleep(86400) # <- if API is down we print and wait 24 hours till we try and call again. 
+                        continue  # skip the rest of the while loop if API failed. 
+                          
+                             
+                                      
+                                 
+                    data = await resp.json() #gives you dictionary of data from API
+                                                   
+                    #updating values of varaibles we set earlier, spit in key shoots out value 
+                    title = data.get("questionTitle")
+                    link = data.get("questionLink")
+                    difficulty = data.get("difficulty")
+                    
+                     
+                    # topic tags 
+                    tags_text = ""
+                    title_slug = data.get("titleSlug")
+                    if title_slug:
+                        select_url = f"https://alfa-leetcode-api.onrender.com/select?titleSlug={title_slug}"
+                        async with session.get(select_url) as detail_resp:
+                            if detail_resp.status == 200:
+                                detail_data = await detail_resp.json()
+                                tags_list = detail_data.get("topicTags", [])
+                                tag_names = [tag.get("name") for tag in tags_list]
+                                tags_text = ", ".join(tag_names)
 
-            title_text = title or "Untitled"
-            if link:
-                title_line = f"**Problem:** [{title_text}]({link})"
-            else:
-                title_line = f"**Problem:** {title_text}"
+                    
+                    # Format message
+                    title_line = f"**Problem:** [{title}]({link})"  # Problem line with link
+                    title_header = f"🎯 **Daily Coding Problem ({difficulty})** 🎯"
+                    message = f"{title_header}\n\n{title_line}"
 
-            # diff_text = str(difficulty).capitalize() if difficulty else "Unknown"
-            # message = f"🎯 **Daily Coding Problem**\n\n{title_line}\n**Difficulty:** {diff_text}"
-            # await channel.send(message)
+                    if tags_text:
+                        message += f"\n\n**Tags:** {tags_text}"
 
-            diff_text = str(difficulty).capitalize() if difficulty else "Unknown"
-            # Title includes difficulty in parentheses
-            title_header = f"🎯 **Daily Coding Problem ({diff_text})** 🎯"
-            message = f"{title_header}\n\n{title_line}"
-            await channel.send(message)
+                    # Add closing line
+                    message += "\n\nGood Luck Coding! 🧑‍💻⌨️✍️"
+
+                    # Send to Discord
+                    await channel.send(message)
+                            
 
 
-        except Exception:
-            logging.exception("Failed to post daily problem")
+        except Exception as e:
+            logging.exception(f"Failed to post daily problem: {e}")
 
-        await asyncio.sleep(86400)  # 24 hours
-
+        
+        # Wait 24 hours before fetching the next daily problem
+        await asyncio.sleep(86400)  
 
 # --------------------
 
@@ -434,10 +487,5 @@ async def on_member_join(member):
         f"🎯 Welcome, {member.name}! Ready to level up your interview prep? Check out **#how-it-works** to get started and feel free to introduce yourself in **#introductions**!")
 
 
-if not token:
-    # Fail fast with a clear error if token is missing from environment/.env
-    raise RuntimeError(
-        "Discord token not found. Set DISCORD_TOKEN (production) or TESTING_BOT_CODE (development) in environment or .env"
-    )
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
