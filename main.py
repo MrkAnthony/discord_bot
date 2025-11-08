@@ -82,7 +82,7 @@ async def daily_question():
     # dont start doing anything till the robot is online 
     await bot.wait_until_ready()
 
-    channel_id = 1436017918931501066  
+    channel_id = 1435376608222380092
     channel = bot.get_channel(channel_id) #gives discord bot access to "daily question" channel
 
     
