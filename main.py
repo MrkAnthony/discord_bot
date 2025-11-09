@@ -7,6 +7,7 @@ TODO:
 import discord
 from discord.ext import commands
 from discord import app_commands
+from datetime import datetime
 import random
 import asyncio
 import aiohttp
@@ -14,6 +15,7 @@ import logging
 from dotenv import load_dotenv
 from neetcode_list import NEETCODE_LIST
 import os
+import pytz
 
 load_dotenv()
 # Railway sets this automatically in production
@@ -72,22 +74,16 @@ async def on_ready():
         bot.loop.create_task(daily_question())
 
 
-
-
-
-
 # --------------------
 # Function for daily question posting / (Mateo Lauzardo)
 async def daily_question():
-    
-    # dont start doing anything till the robot is online 
+    # don't start doing anything till the robot is online
     await bot.wait_until_ready()
 
     channel_id = 1435376608222380092
-    channel = bot.get_channel(channel_id) #gives discord bot access to "daily question" channel
+    channel = bot.get_channel(channel_id)  # gives discord bot access to "daily question" channel
 
-    
-    # Test case if channel is None existing 
+    # Test case if channel is None existing
     if channel is None:
         try:
             channel = await bot.fetch_channel(channel_id)
@@ -95,84 +91,80 @@ async def daily_question():
             logging.exception("Daily channel not found or could not be fetched")
             return
 
-
     # If channel isn't a text channel
     if not isinstance(channel, discord.TextChannel):
         logging.error("Daily channel is not a text channel")
         return
 
-    
     API_URL = "https://alfa-leetcode-api.onrender.com/daily"
+    timezone = pytz.timezone('America/New_York')
+    POST_HOUR = 14  # 2PM
 
+    last_post_date = None
 
     # while loop which runs indefinitely IF the bot is NOT closed
     while not bot.is_closed():
-       
+
         try:
-            # simple test case 
-            print("I made it here")
+            now = datetime.now(timezone)
+            current_date = now.date()
+            # Only post if it's noon and we haven't posted today
+            if now.hour == POST_HOUR and last_post_date != current_date:
+                print(f"Posting the daily question at {now.strftime('%I:%M %p')}")
 
-            # "aiohttp.ClientSession()" opens browser session
-            async with aiohttp.ClientSession() as session:
-                    
-            
-                # session.get request to get data from the API URL
-                async with session.get(API_URL) as resp:
-                                
-                    if resp.status != 200: # if response is NOT successful / ELSE continue running
-                        
-                        logging.error(f"API returned status {resp.status}")
-                        await asyncio.sleep(86400) # <- if API is down we print and wait 24 hours till we try and call again. 
-                        continue  # skip the rest of the while loop if API failed. 
-                          
-                             
-                                      
-                                 
-                    data = await resp.json() #gives you dictionary of data from API
-                                                   
-                    #updating values of varaibles we set earlier, spit in key shoots out value 
-                    title = data.get("questionTitle")
-                    link = data.get("questionLink")
-                    difficulty = data.get("difficulty")
-                    
-                     
-                    # topic tags 
-                    tags_text = ""
-                    title_slug = data.get("titleSlug")
-                    if title_slug:
-                        select_url = f"https://alfa-leetcode-api.onrender.com/select?titleSlug={title_slug}"
-                        async with session.get(select_url) as detail_resp:
-                            if detail_resp.status == 200:
-                                detail_data = await detail_resp.json()
-                                tags_list = detail_data.get("topicTags", [])
-                                tag_names = [tag.get("name") for tag in tags_list]
-                                tags_text = ", ".join(tag_names)
+                # "aiohttp.ClientSession()" opens browser session
+                async with aiohttp.ClientSession() as session:
+                    # session.get request to get data from the API URL
+                    async with session.get(API_URL) as resp:
 
-                    
-                    # Format message
-                    title_line = f"**Problem:** [{title}]({link})"  # Problem line with link
-                    title_header = f"🎯 **Daily Coding Problem ({difficulty})** 🎯"
-                    message = f"{title_header}\n\n{title_line}"
+                        if resp.status != 200:  # if response is NOT successful / ELSE continue running
 
-                    if tags_text:
-                        message += f"\n\n**Tags:** {tags_text}"
+                            logging.error(f"API returned status {resp.status}")
+                            await asyncio.sleep(
+                                3600)  # <- if API is down we print and wait 24 hours till we try and call again.
+                            continue  # skip the rest of the while loop if API failed.
 
-                    # Add closing line
-                    message += "\n\nGood Luck Coding! 🧑‍💻⌨️✍️"
+                        data = await resp.json()  # gives you dictionary of data from API
 
-                    # Send to Discord
-                    await channel.send(message)
-                            
+                        # updating values of varaibles we set earlier, spit in key shoots out value
+                        title = data.get("questionTitle")
+                        link = data.get("questionLink")
+                        difficulty = data.get("difficulty")
 
+                        # topic tags
+                        tags_text = ""
+                        title_slug = data.get("titleSlug")
+                        if title_slug:
+                            select_url = f"https://alfa-leetcode-api.onrender.com/select?titleSlug={title_slug}"
+                            async with session.get(select_url) as detail_resp:
+                                if detail_resp.status == 200:
+                                    detail_data = await detail_resp.json()
+                                    tags_list = detail_data.get("topicTags", [])
+                                    tag_names = [tag.get("name") for tag in tags_list]
+                                    tags_text = ", ".join(tag_names)
+
+                        # Format message
+                        title_line = f"**Problem:** [{title}]({link})"  # Problem line with link
+                        title_header = f"🎯 **Daily Coding Problem ({difficulty})** 🎯"
+                        message = f"{title_header}\n\n{title_line}"
+
+                        if tags_text:
+                            message += f"\n\n**Tags:** {tags_text}"
+
+                        # Add closing line
+                        message += "\n\nGood Luck Coding! 🧑‍💻⌨️✍️"
+
+                        # Send to Discord
+                        await channel.send(message)
+                        last_post_date = current_date
 
         except Exception as e:
             logging.exception(f"Failed to post daily problem: {e}")
 
-        
-        # Wait 24 hours before fetching the next daily problem
-        await asyncio.sleep(86400)  
+        # Checking every hour
+        await asyncio.sleep(3600)
 
-# --------------------
+    # --------------------
 
 
 @bot.tree.command(name='join-queue', description="Joining the interview queue")
@@ -499,7 +491,6 @@ async def on_member_join(member):
     except discord.Forbidden:
         print(f"Could not DM {member.name}, DMs disabled.")
         pass
-
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
