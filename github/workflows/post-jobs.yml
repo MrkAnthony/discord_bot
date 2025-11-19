@@ -1,41 +1,33 @@
 name: fetching-job-postings
-
 on:
   schedule:
     - cron: '0 */4 * * *'  #Run every 4 hours
   workflow_dispatch:
-
 jobs:
   post-jobs:
     runs-on: ubuntu-latest
-
     permissions:
       content: write
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: main
-
       - name: Set Up Python For Script
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Installing Dependencies
         run: |
           pip install requests PyGithub
-
       - name: Run the job posting script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run : python scripts/fetch-jobs.py
-
+        run: python scripts/fetch-jobs.py
       - name: Commit Updated JSON File
         run: |
-            git config user.name "Github Action"
-            git config user.email "action@github.com"
-            git add posted_jobs_*.json
-            git commit -m "Updated posted jobs" || echo "No changes"
-            git push origin main
+          git config user.name "Github Action"
+          git config user.email "action@github.com"
+          git add posted_jobs_*.json
+          git commit -m "Updated posted jobs" || echo "No changes"
+          git push origin main
