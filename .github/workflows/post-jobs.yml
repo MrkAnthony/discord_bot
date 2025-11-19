@@ -2,7 +2,7 @@ name: fetching-job-postings
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  #Run every 4 hours
+    - cron: '37 16,19,22,1 * * *'  # Run in a scheduled interval
   workflow_dispatch:
 
 jobs:
