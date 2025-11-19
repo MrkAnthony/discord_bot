@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
       - name: Installing Dependencies
         run: |
-          pip install requests PyGithub
+          pip install requests PyGithub python-dotenv
       - name: Run the job posting script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
