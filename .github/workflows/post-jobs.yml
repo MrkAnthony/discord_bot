@@ -1,31 +1,41 @@
 name: fetching-job-postings
+
 on:
   schedule:
     - cron: '0 */4 * * *'  #Run every 4 hours
   workflow_dispatch:
+
 jobs:
   post-jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: main
+          token: ${{ secrets.ADMIN_PAT }} 
+      
       - name: Set Up Python For Script
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      
       - name: Installing Dependencies
         run: |
           pip install requests PyGithub python-dotenv
+      
       - name: Run the job posting script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python scripts/fetch-jobs.py
+      
       - name: Commit Updated JSON File
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Updated posted jobs"
           file_pattern: "posted_jobs_*.json"
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADMIN_PAT }} 
