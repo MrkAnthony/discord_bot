@@ -148,7 +148,7 @@ async def daily_question():
 
                         data = await resp.json()  # gives you dictionary of data from API
 
-                        # updating values of varaibles we set earlier, spit in key shoots out value
+                        # updating values of variables we set earlier, spit in key shoots out value
                         title = data.get("questionTitle")
                         link = data.get("questionLink")
                         difficulty = data.get("difficulty")
