@@ -6,11 +6,12 @@ import json
 from dotenv import load_dotenv
 
 load_dotenv()
-TRACKING_FILE = 'posted_jobs_internships.json'
+TRACKING_FILE = 'posted_jobs_newgrad.json'
 
 
-def fetch_parse_jobs():
-    REPO_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/README.md'
+def fetch_parse_newgrad_jobs():
+    # SimplifyJobs New Grad repository
+    REPO_URL = 'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/README.md'
 
     response = requests.get(REPO_URL)
     content = response.text
@@ -24,6 +25,7 @@ def fetch_parse_jobs():
     capture = False
 
     for i, section in enumerate(sections):
+        # Look for Software Engineering, Product Management, and Data Science sections
         if '💻' in section or '📱' in section or '🤖' in section:
             if 'Software Engineering' in section or 'Product Management' in section or 'Data Science' in section:
                 capture = True
@@ -86,15 +88,15 @@ def fetch_parse_jobs():
         age_match = re.search(r'(\d+)d', age_text)
         days_old = int(age_match.group(1)) if age_match else 999
 
-        # Only process jobs that are 0-3 days old (fresh postings)
-        if days_old > 3:
+        # Only process jobs that are 0-4 days old (fresh postings with 4-day window)
+        if days_old > 4:
             continue
 
         # Skip if no link
         if not link:
             continue
 
-        print(f"Found fresh job: {company} - {role} ({days_old}d old)")
+        print(f"Found fresh new grad job: {company} - {role} ({days_old}d old)")
 
         # Clean up role and company names
         clean_role = re.sub(r'\s+', ' ', role).strip()
@@ -135,19 +137,42 @@ def saved_posted_job(posted_id):
         json.dump(data, f, indent=2)
 
 
+def clean_old_jobs(all_jobs, posted_jobs):
+    """
+    Remove jobs from tracking that are older than 4 days.
+    This ensures we clear out stale postings every 4 days.
+    """
+    # Get job IDs that are still active (0-4 days old)
+    active_job_ids = set(all_jobs.keys())
+    
+    # Filter posted_jobs to only include those still active
+    cleaned_posted_jobs = posted_jobs & active_job_ids
+    
+    removed_count = len(posted_jobs) - len(cleaned_posted_jobs)
+    if removed_count > 0:
+        print(f"🧹 Cleaned {removed_count} jobs older than 4 days from tracking")
+    
+    return cleaned_posted_jobs
+
+
 def send_discord_webhook(job, webhook_url):
     if not job['link']:
         print(f" Skipped {job['company']} - {job['role']} (no application link)")
         return False
 
     embed = {
-        "title": f"🎯 {job['company']} - {job['role']}",
+        "title": f"🎓 {job['company']} - {job['role']}",
         "url": job['link'],
-        "color": 3447003,
+        "color": 5763719,  # Different color for new grad (purple)
         "fields": [
             {
                 "name": "📍 Location",
                 "value": job['location'],
+                "inline": True
+            },
+            {
+                "name": "⏰ Posted",
+                "value": f"{job['DaysOld']} day(s) ago",
                 "inline": True
             },
             {
@@ -158,7 +183,7 @@ def send_discord_webhook(job, webhook_url):
         ],
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "footer": {
-            "text": "Panthers to FAANG | Summer 2026 Internships"
+            "text": "Panthers to FAANG | New Grad 2025-2026"
         }
     }
 
@@ -170,17 +195,17 @@ def send_discord_webhook(job, webhook_url):
         print(f"✅ Posted: {job['company']} - {job['role']}")
         return True
     except Exception as e:
-        print(f"Error Posting Job: {e}")
+        print(f"❌ Error Posting Job: {e}")
         return False
 
 
 def main():
     # Use TEST webhook if TEST_MODE is set, otherwise use production
     if os.getenv('TEST_MODE'):
-        WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST')
+        WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_NEWGRAD_TEST')
         print("🧪 TEST MODE - Posting to test server")
     else:
-        WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_INTERNSHIPS')
+        WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_NEWGRAD')
         print("🚀 PRODUCTION MODE - Posting to production server")
 
     if not WEBHOOK_URL:
@@ -189,15 +214,19 @@ def main():
 
     # Load the posted jobs
     posted_jobs = load_posted_job()
-    print(f"📋 Already posted: {len(posted_jobs)} jobs")
+    print(f"📋 Already posted: {len(posted_jobs)} new grad jobs")
 
-    all_jobs = fetch_parse_jobs()
-    print(f"📊 Found {len(all_jobs)} total jobs in repo")
+    # Fetch all current jobs
+    all_jobs = fetch_parse_newgrad_jobs()
+    print(f"📊 Found {len(all_jobs)} total new grad jobs in repo")
+
+    # Clean old jobs (older than 4 days)
+    posted_jobs = clean_old_jobs(all_jobs, posted_jobs)
 
     # Filter to only new jobs
     new_jobs = {job_id: job_data for job_id, job_data in all_jobs.items()
                 if job_id not in posted_jobs}
-    print(f"🆕 New jobs to post: {len(new_jobs)}")
+    print(f"🆕 New grad jobs to post: {len(new_jobs)}")
 
     MAX_POST = 10
     posted_count = 0
@@ -208,7 +237,7 @@ def main():
             posted_count += 1
 
     saved_posted_job(posted_jobs)
-    print(f"✅ Done! Posted {posted_count} new jobs. Total tracked: {len(posted_jobs)}")
+    print(f"✅ Done! Posted {posted_count} new grad jobs. Total tracked: {len(posted_jobs)}")
 
     if len(new_jobs) > MAX_POST:
         print(f"⏳ {len(new_jobs) - MAX_POST} jobs remaining for next run")
