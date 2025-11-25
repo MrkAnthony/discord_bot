@@ -5,9 +5,9 @@ TODO:
 """
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import random
 import asyncio
 import aiohttp
@@ -73,6 +73,29 @@ async def on_ready():
         bot._daily_question_started = True
         bot.loop.create_task(daily_question())
 
+    # Start the cleanup task
+    if not cleanup_job_postings.is_running():
+        cleanup_job_postings.start()
+
+
+@tasks.loop(hours=2)
+async def cleanup_job_postings():
+    channel_id = bot.get_channel(1440721125712597042)
+    if not channel_id:
+        print("Channel not found")
+        return
+
+    cutoff_time = datetime.now(timezone.utc) - timedelta(days=4)
+    deleted_count = 0
+    async for message in channel_id.history(limit=None):
+        if message.created_at < cutoff_time:
+            try:
+                await message.delete()
+                deleted_count += 1
+            except Exception as e:
+                print(f"There was an error {e}")
+    print(f"[{datetime.now()}] Cleanup ran - deleted {deleted_count} messages from #{channel_id.name}")
+
 
 # --------------------
 # Function for daily question posting / (Mateo Lauzardo)
@@ -104,7 +127,6 @@ async def daily_question():
 
     # while loop which runs indefinitely IF the bot is NOT closed
     while not bot.is_closed():
-
         try:
             now = datetime.now(timezone)
             current_date = now.date()
