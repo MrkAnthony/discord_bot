@@ -262,6 +262,7 @@ async def try_match(guild, difficulty):
 
 async def create_interview_room(guild, user1, user2, difficulty):
     category = guild.get_channel(INTERVIEW_ROOM_CATEGORY_ID)
+    interviewer_rubric = 'https://zero2sudo.notion.site/mock-swe-interview-rubric-practice-zero2sudo'
 
     if not category:
         print("This wasn't found")
@@ -323,6 +324,9 @@ async def create_interview_room(guild, user1, user2, difficulty):
         Interviewers: Only look at **your** problem  
         Suggested time: 30–45 minutes per round  
         Switch roles after Round 1  
+        
+        📋 **[Interviewer Rubric & Guide]({interviewer_rubric})**  
+        *(How to conduct the interview, evaluate solutions, and provide feedback)*
         
         🎙️ **Voice Channel:** {interview_channel.mention}
         """.strip()
