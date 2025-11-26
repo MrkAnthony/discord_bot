@@ -30,7 +30,6 @@ jobs:
       
       - name: Run the job posting script
         env:
-          TEST_MODE: 'true'  # Remove this line or set to 'false' for production
           DISCORD_WEBHOOK_URL_INTERNSHIPS: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS }}
           DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST }}
         run: python scripts/fetch-jobs.py
