@@ -2,9 +2,8 @@ name: fetch-newgrad-job-postings
 
 on:
   schedule:
-    # Runs at 11 AM, 3 PM, 7 PM, 11 PM EST (16:00, 20:00, 00:00, 04:00 UTC)
-    - cron: '0 16,20 * * *'  # 11 AM EST, 3 PM EST
-    - cron: '0 0,4 * * *'    # 7 PM EST, 11 PM EST (next day in UTC)
+    # Runs at 11 AM, 3 PM, 7 PM, 11 PM EST (10:00, 14:00, 18:00, 22:00 UTC)
+    - cron: '0 15,19,23,3 * * *'
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
