@@ -80,22 +80,35 @@ async def on_ready():
 
 @tasks.loop(hours=2)
 async def cleanup_job_postings():
-    channel_id = bot.get_channel(1440721125712597042)
-    if not channel_id:
+    channel_summer_internships = bot.get_channel(1440721125712597042)
+    channel_new_grad = bot.get_channel(1443097187713024202)
+
+    if not channel_summer_internships or channel_new_grad:
         print("Channel not found")
         return
 
     cutoff_time = datetime.now(timezone.utc) - timedelta(days=4)
-    deleted_count = 0
-    async for message in channel_id.history(limit=None):
+    deleted_count_internships = 0
+    deleted_count_grad = 0
+
+    async for message in channel_summer_internships.history(limit=None):
         if message.created_at < cutoff_time:
             try:
                 await message.delete()
-                deleted_count += 1
+                deleted_count_internships += 1
             except Exception as e:
-                print(f"There was an error {e}")
-    print(f"[{datetime.now()}] Cleanup ran - deleted {deleted_count} messages from #{channel_id.name}")
+                print(f"Error deleting old summer internship posts: {e}")
 
+    async for message in channel_new_grad.history(limit=None):
+        if message.created_at < cutoff_time:
+            try:
+                await message.delete()
+                deleted_count_grad += 1
+            except Exception as e:
+                print(f"Error deleting old new grad posts: {e}")
+
+    print(f"{datetime.now} Cleanup ran - deleted {deleted_count_internships} messages from #{channel_summer_internships.name}")
+    print(f"{datetime.now} Cleanup ran - deleted {deleted_count_grad} messages from #{channel_new_grad.name}")
 
 # --------------------
 # Function for daily question posting / (Mateo Lauzardo)
