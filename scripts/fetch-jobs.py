@@ -199,6 +199,11 @@ def main():
                 if job_id not in posted_jobs}
     print(f"🆕 New jobs to post: {len(new_jobs)}")
 
+    # to avoid constant redeploying if there is no new jobs then we will exit waiting for the next run
+    if not new_jobs:
+        print("No new jobs were found")
+        return
+
     MAX_POST = 10
     posted_count = 0
 
