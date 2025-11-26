@@ -171,11 +171,6 @@ def send_discord_webhook(job, webhook_url):
                 "inline": True
             },
             {
-                "name": "⏰ Posted",
-                "value": f"{job['DaysOld']} day(s) ago",
-                "inline": True
-            },
-            {
                 "name": "🔗 Application",
                 "value": f"[Click here to apply]({job['link']})",
                 "inline": False
@@ -200,8 +195,8 @@ def send_discord_webhook(job, webhook_url):
 
 
 def main():
-    # Use TEST webhook if TEST_MODE is set, otherwise use production
-    if os.getenv('TEST_MODE'):
+    # Use TEST webhook if DISCORD_WEBHOOK_URL_NEWGRAD_TEST is set, otherwise use production
+    if os.getenv('DISCORD_WEBHOOK_URL_NEWGRAD_TEST'):
         WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_NEWGRAD_TEST')
         print("🧪 TEST MODE - Posting to test server")
     else:

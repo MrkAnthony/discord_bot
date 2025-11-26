@@ -175,8 +175,8 @@ def send_discord_webhook(job, webhook_url):
 
 
 def main():
-    # Use TEST webhook if TEST_MODE is set, otherwise use production
-    if os.getenv('TEST_MODE'):
+    # Use TEST webhook if DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST is set, otherwise use production
+    if os.getenv('DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST'):
         WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST')
         print("🧪 TEST MODE - Posting to test server")
     else:
@@ -186,7 +186,7 @@ def main():
     if not WEBHOOK_URL:
         print("❌ Webhook URL not found in environment variables")
         return
-
+    
     # Load the posted jobs
     posted_jobs = load_posted_job()
     print(f"📋 Already posted: {len(posted_jobs)} jobs")
