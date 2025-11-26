@@ -1,13 +1,13 @@
-name: fetching-job-postings
+name: fetch-newgrad-job-postings
 
 on:
   schedule:
-  # Runs at 11 AM, 3 PM, 7 PM, 11 PM EST (4:00 PM, 8:00 PM, 12:00 AM, 4:00 AM UTC)
-    - cron: '0 16,20,0,4 * * *'
-  workflow_dispatch:
+    # Runs at 11 AM, 3 PM, 7 PM, 11 PM EST (10:00, 14:00, 18:00, 22:00 UTC)
+    - cron: '0 15,19,23,3 * * *'
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  post-jobs:
+  post-newgrad-jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,17 +28,17 @@ jobs:
         run: |
           pip install requests PyGithub python-dotenv
       
-      - name: Run the job posting script
+      - name: Run the new grad job posting script
         env:
           TEST_MODE: 'true'  # Remove this line or set to 'false' for production
-          DISCORD_WEBHOOK_URL_INTERNSHIPS: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS }}
-          DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST }}
-        run: python scripts/fetch-jobs.py
+          DISCORD_WEBHOOK_URL_NEWGRAD: ${{ secrets.DISCORD_WEBHOOK_URL_NEWGRAD }}
+          DISCORD_WEBHOOK_URL_NEWGRAD_TEST: ${{ secrets.DISCORD_WEBHOOK_URL_NEWGRAD_TEST }}
+        run: python scripts/fetch-newgrad-jobs.py
       
       - name: Commit Updated JSON File
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Updated posted jobs"
-          file_pattern: "posted_jobs_*.json"
+          commit_message: "Updated posted new grad jobs"
+          file_pattern: "posted_jobs_newgrad.json"
         env:
-          GITHUB_TOKEN: ${{ secrets.ADMIN_PAT }} 
+          GITHUB_TOKEN: ${{ secrets.ADMIN_PAT }}

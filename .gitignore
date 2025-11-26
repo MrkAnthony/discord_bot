@@ -57,3 +57,7 @@ coverage.xml
 
 # --- IDE Helper Files ---
 *.iml
+GITHUB_ACTIONS_SETUP.md
+GITHUB_SECRETS_GUIDE.md
+TESTING_SETUP_GUIDE.md
+QUICK_START.md
