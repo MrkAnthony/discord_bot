@@ -83,7 +83,7 @@ async def cleanup_job_postings():
     channel_summer_internships = bot.get_channel(1440721125712597042)
     channel_new_grad = bot.get_channel(1443097187713024202)
 
-    if not channel_summer_internships or channel_new_grad:
+    if not channel_summer_internships or not channel_new_grad:
         print("Channel not found")
         return
 
@@ -107,8 +107,8 @@ async def cleanup_job_postings():
             except Exception as e:
                 print(f"Error deleting old new grad posts: {e}")
 
-    print(f"{datetime.now} Cleanup ran - deleted {deleted_count_internships} messages from #{channel_summer_internships.name}")
-    print(f"{datetime.now} Cleanup ran - deleted {deleted_count_grad} messages from #{channel_new_grad.name}")
+    print(f"{datetime.now()} Cleanup ran - deleted {deleted_count_internships} messages from #{channel_summer_internships.name}")
+    print(f"{datetime.now()} Cleanup ran - deleted {deleted_count_grad} messages from #{channel_new_grad.name}")
 
 # --------------------
 # Function for daily question posting / (Mateo Lauzardo)
