@@ -77,6 +77,14 @@ def fetch_parse_jobs():
         location = re.sub(r'<br\s*/?>', ', ', location)
         location = re.sub(r'<[^>]+>', '', location).strip()
 
+        # Handle multiple locations that are concatenated without separators
+        # Pattern: State code (IL) directly followed by city name (Vernon) → add comma between them
+        if re.search(r'[A-Z]{2}[A-Z][a-z]', location):
+            location = re.sub(r'([A-Z]{2})(?=[A-Z][a-z])', r'\1, ', location)
+            location = re.sub(r'\s*,\s*', ', ', location)
+            location = re.sub(r',+', ',', location)
+            location = location.strip(', ')
+
         # Extract application link from the application column
         link_match = re.search(r'href=["\']([^"\']+)["\']', application_html)
         link = link_match.group(1) if link_match else None
