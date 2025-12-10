@@ -52,14 +52,16 @@ Both commands only work in `#find-partner` channel.
 
 ### Internship Postings
 - **Source**: [SimplifyJobs Summer 2026 Internships](https://github.com/SimplifyJobs/Summer2026-Internships)
-- **Schedule**: Runs every few hours via GitHub Actions (see `.github/workflows/post-jobs.yml`)
+- **Schedule**: Runs 4 times daily at 11 AM, 3 PM, 7 PM, and 10 PM EST via GitHub Actions (see `.github/workflows/post-jobs.yml`)
 - **Job Types**: Software Engineering, Product Management, Data Science
 - **Tracking**: `posted_jobs_internships.json` prevents duplicate posts
 - **Freshness**: Only posts jobs 0-3 days old
+- **Auto-Cleanup**: Jobs older than 4 days are automatically removed from tracking
+- **Test Mode**: Automatically posts to test server when running locally or in GitHub Actions
 
 ### New Grad Postings
 - **Source**: [SimplifyJobs New Grad Positions](https://github.com/SimplifyJobs/New-Grad-Positions)
-- **Schedule**: Runs 5 times daily at 9 AM, 11 AM, 3 PM, 7 PM, and 11 PM EST
+- **Schedule**: Runs 4 times daily at 10 AM, 2 PM, 6 PM, and 10 PM EST via GitHub Actions (see `.github/workflows/post-newgrad-jobs.yml`)
 - **Job Types**: Software Engineering, Product Management, Data Science
 - **Tracking**: `posted_jobs_newgrad.json` prevents duplicate posts
 - **Freshness**: Only posts jobs 0-4 days old
@@ -95,14 +97,13 @@ Edit the cron expressions in the workflow files:
 **Internships** (`.github/workflows/post-jobs.yml`):
 ```yaml
 schedule:
-  - cron: '37 16,19,22,1 * * *'  # Currently: 4 times daily
+  - cron: '0 16,20,0,4 * * *'  # 11 AM, 3 PM, 7 PM, 11 PM EST
 ```
 
 **New Grads** (`.github/workflows/post-newgrad-jobs.yml`):
 ```yaml
 schedule:
-  - cron: '0 14,16,20 * * *'  # 9 AM, 11 AM, 3 PM EST
-  - cron: '0 0,4 * * *'        # 7 PM, 11 PM EST
+  - cron: '0 15,19,23,3 * * *'  # 10 AM, 2 PM, 6 PM, 10 PM EST
 ```
 
 **Note:** Times shown are EST. GitHub Actions runs on UTC, so schedules are automatically converted.
