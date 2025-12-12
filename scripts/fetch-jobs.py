@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone
 import json
 from dotenv import load_dotenv
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 load_dotenv()
 TRACKING_FILE = 'posted_jobs_internships.json'
@@ -87,7 +88,25 @@ def fetch_parse_jobs():
 
         # Extract application link from the application column
         link_match = re.search(r'href=["\']([^"\']+)["\']', application_html)
-        link = link_match.group(1) if link_match else None
+        if link_match:
+            link = link_match.group(1)
+            # to clean up tracking parameters
+            try:
+                parsed = urlparse(link)
+                if parsed.query:
+                    params = parse_qs(parsed.query, keep_blank_values=True)
+                    # remove tracking parameters
+                    params.pop('utm_source', None)
+                    params.pop('ref', None)
+                    # rebuilding the query string
+                    new_query = urlencode(params, doseq=True)
+                    # rebuild the URL
+                    link = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params,
+                                       new_query, parsed.fragment))
+            except Exception as e:
+                print(f"The urllib failed we are resulting back to regex: {e}")
+                link = re.sub(r'[?&](utm_source|ref)=Simplify', '', link)
+                link = re.sub(r'[?&]$', '', link)
 
         # Extract days old
         age_text = re.sub(r'<[^>]+>', '', age_html).strip()
@@ -194,7 +213,7 @@ def main():
     if not WEBHOOK_URL:
         print("❌ Webhook URL not found in environment variables")
         return
-    
+
     # Load the posted jobs
     posted_jobs = load_posted_job()
     print(f"📋 Already posted: {len(posted_jobs)} jobs")
