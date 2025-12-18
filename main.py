@@ -1,8 +1,3 @@
-"""
-TODO:
-2. Providing questions from Neetcode 150 (2 questions each with link and name of the problem)
-3. and assigning random roles (Interviewer or Candidate)
-"""
 
 import discord
 from discord.ext import commands, tasks
@@ -33,7 +28,7 @@ else:
     print("🧪 Running in DEVELOPMENT mode (Local)")
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-intents = discord.Intents.default()
+intents = discord.Intents.default( )
 
 # To access member info when pairing
 intents.members = True
@@ -78,7 +73,7 @@ async def on_ready():
         cleanup_job_postings.start()
 
 
-@tasks.loop(hours=2)
+@tasks.loop(hours=24)
 async def cleanup_job_postings():
     channel_summer_internships = bot.get_channel(1440721125712597042)
     channel_new_grad = bot.get_channel(1443097187713024202)
