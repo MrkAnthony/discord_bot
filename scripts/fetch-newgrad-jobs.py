@@ -80,6 +80,11 @@ def fetch_parse_newgrad_jobs():
         location = re.sub(r'<br\s*/?>', ', ', location)
         location = re.sub(r'<[^>]+>', '', location).strip()
 
+        # Skip the countries outside of US
+        invalid_posting_location = ["Canada", "UK"]
+        if location in invalid_posting_location:
+            continue
+
         # Extract application link from the application column
         link_match = re.search(r'href=["\']([^"\']+)["\']', application_html)
         if link_match:
@@ -156,6 +161,12 @@ def saved_posted_job(posted_id):
         json.dump(data, f, indent=2)
 
 
+'''
+Mark:
+- We have a cleanup function that already does the clean it runs every 2 hours in main.py 
+'''
+
+
 def clean_old_jobs(all_jobs, posted_jobs):
     """
     Remove jobs from tracking that are older than 4 days.
@@ -163,14 +174,14 @@ def clean_old_jobs(all_jobs, posted_jobs):
     """
     # Get job IDs that are still active (0-4 days old)
     active_job_ids = set(all_jobs.keys())
-    
+
     # Filter posted_jobs to only include those still active
     cleaned_posted_jobs = posted_jobs & active_job_ids
-    
+
     removed_count = len(posted_jobs) - len(cleaned_posted_jobs)
     if removed_count > 0:
         print(f"🧹 Cleaned {removed_count} jobs older than 4 days from tracking")
-    
+
     return cleaned_posted_jobs
 
 

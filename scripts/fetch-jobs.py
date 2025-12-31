@@ -78,6 +78,11 @@ def fetch_parse_jobs():
         location = re.sub(r'<br\s*/?>', ', ', location)
         location = re.sub(r'<[^>]+>', '', location).strip()
 
+        # Skip the countries outside of US
+        invalid_posting_location = ["Canada", "UK"]
+        if location in invalid_posting_location:
+            continue
+
         # Handle multiple locations that are concatenated without separators
         # Pattern: State code (IL) directly followed by city name (Vernon) → add comma between them
         if re.search(r'[A-Z]{2}[A-Z][a-z]', location):
