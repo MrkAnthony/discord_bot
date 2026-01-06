@@ -80,8 +80,8 @@ def fetch_parse_jobs():
 
         # Skip the countries outside of US
         invalid_posting_location = ["Canada", "UK"]
-        location = [part.strip() for part in location.split(",")]
-        if any(country in location for country in invalid_posting_location):
+        location_parts = [part.strip() for part in location.split(",")]
+        if any(country in location_parts for country in invalid_posting_location):
             continue
 
         # Handle multiple locations that are concatenated without separators
