@@ -77,7 +77,7 @@ def fetch_parse_newgrad_jobs():
 
         # Extract location (handle <details> tags and <br> tags)
         location = re.sub(r'<details>.*?</details>', '', location_html, flags=re.DOTALL)
-        location = re.sub(r'<br\s*/?>', ', ', location)
+        location = re.sub(r'</?br\s*/?>', ', ', location)
         location = re.sub(r'<[^>]+>', '', location).strip()
 
         # Skip the countries outside of US
