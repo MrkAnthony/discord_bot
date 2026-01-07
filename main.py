@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from neetcode_list import NEETCODE_LIST
 import os
 import pytz
+import sys
+import time
 
 load_dotenv()
 # Railway sets this automatically in production
@@ -526,5 +528,17 @@ async def on_member_join(member):
         print(f"Could not DM {member.name}, DMs disabled.")
         pass
 
-
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+MAX_TRYS = 5
+retry_count = 0
+while retry_count < MAX_TRYS:
+    try:
+        bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+        break
+    except discord.HTTPException as error:
+        if error.status == 429:
+            retry_count += 1
+            wait_time = min(60 * (2 ** retry_count), 900)  # 2min, 4min, 8min, 16min, max 15min
+            print(f"⚠️ Rate limited by Discord. Waiting {wait_time}s before retry {retry_count}/{MAX_TRYS}")
+            time.sleep(wait_time)
+        else:
+            sys.exit(0)
