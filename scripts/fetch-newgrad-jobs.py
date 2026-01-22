@@ -12,7 +12,7 @@ TRACKING_FILE = 'posted_jobs_newgrad.json'
 
 def fetch_parse_newgrad_jobs():
     # SimplifyJobs New Grad repository
-    REPO_URL = 'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/README.md'
+    REPO_URL = os.getenv('SIMPLIFY_NEWGRAD_URL')
 
     response = requests.get(REPO_URL)
     content = response.text

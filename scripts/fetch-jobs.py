@@ -11,7 +11,7 @@ TRACKING_FILE = 'posted_jobs_internships.json'
 
 
 def fetch_parse_jobs():
-    REPO_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/README.md'
+    REPO_URL = os.getenv('SIMPLIFY_INTERNSHIPS_URL')
 
     response = requests.get(REPO_URL)
     content = response.text
