@@ -31,6 +31,7 @@ jobs:
       - name: Run the job posting script
         env:
           DISCORD_WEBHOOK_URL_INTERNSHIPS: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS }}
+          SIMPLIFY_INTERNSHIP_URL: ${{ secrets.SIMPLIFY_INTERNSHIP_URL }}
           DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST: ${{ secrets.DISCORD_WEBHOOK_URL_INTERNSHIPS_TEST }}
         run: python scripts/fetch-jobs.py
       

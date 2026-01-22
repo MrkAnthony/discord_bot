@@ -31,6 +31,7 @@ jobs:
       - name: Run the new grad job posting script
         env:
           DISCORD_WEBHOOK_URL_NEWGRAD: ${{ secrets.DISCORD_WEBHOOK_URL_NEWGRAD }}
+          SIMPLIFY_NEWGRAD_URL: ${{ secrets.SIMPLIFY_NEWGRAD_URL }}
           DISCORD_WEBHOOK_URL_NEWGRAD_TEST: ${{ secrets.DISCORD_WEBHOOK_URL_NEWGRAD_TEST }}
         run: python scripts/fetch-newgrad-jobs.py
       
