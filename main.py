@@ -294,7 +294,7 @@ async def try_match(guild, difficulty):
 
 async def create_interview_room(guild, user1, user2, difficulty):
     category = guild.get_channel(INTERVIEW_ROOM_CATEGORY_ID)
-    interviewer_rubric = 'https://zero2sudo.notion.site/mock-swe-interview-rubric-practice-zero2sudo'
+    interviewer_rubric = 'https://glory-tax-ea2.notion.site/Mock-SWE-Interview-Rubric-Practice-for-Google-Amazon-Microsoft-etc-2fe5687314c281e8b3c3c7065e418246'
 
     if not category:
         print("This wasn't found")
