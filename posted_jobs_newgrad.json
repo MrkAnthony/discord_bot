@@ -1,23 +1,21 @@
 {
   "posted_ids": [
-    "bridger_early_career_product_engineer_nyc",
-    "iridium_communications_engineer_1_-_software_engineer_reston_va_chandler_az",
-    "medtronic_software_engineer_1_-_ai-driven_data_solutions_lafayette_co",
-    "dewberry_entry_level_geospatialremote_sensing_analyst_tampa_fl",
-    "zello_software_engineer_1_-_ai_generalist_austin_tx",
-    "nvidia_software_engineer_new_grad_-_physical_design_infrastructure_santa_clara_ca",
-    "fox_machine_learning_engineer_1_nyc",
-    "fidelity_national_information_services_mainframe_software_engineer_1_columbus_ga",
-    "traba_software_engineer_new_grad_nyc",
-    "huntington_ingalls_industries_software_engineer_1_newport_news_va",
-    "rtx_software_engineer_1_concord_ma_tewksbury_ma",
-    "westinghouse_electric_company_safety_software_engineer_1c_hmi_systems_cranberry_twp_pa",
-    "black_cape_junior_full_stack_software_engineer_colorado_springs_co",
-    "nvidia_deep_learning_software_engineer_new_grad_-_inference__",
-    "nexxen_software_engineer_1_-_dsp_runtime_nyc_baltimore_md",
     "amazon_efa_network_software_engineer_1_-_annapurna_labs_seattle_wa",
-    "torch_technologies_entry_level_engineeranalyst_huntsville_al"
+    "nexxen_software_engineer_1_-_dsp_runtime_nyc_baltimore_md",
+    "rtx_software_engineer_1_dulles_va",
+    "traba_software_engineer_new_grad_nyc",
+    "medtronic_software_engineer_1_-_ai-driven_data_solutions_lafayette_co",
+    "huntington_ingalls_industries_software_engineer_1_newport_news_va",
+    "bridger_early_career_product_engineer_nyc",
+    "dewberry_entry_level_geospatialremote_sensing_analyst_tampa_fl",
+    "iridium_communications_engineer_1_-_software_engineer_reston_va_chandler_az",
+    "black_cape_junior_full_stack_software_engineer_colorado_springs_co",
+    "zello_software_engineer_1_-_ai_generalist_austin_tx",
+    "rtx_software_engineer_1_concord_ma_tewksbury_ma",
+    "torch_technologies_entry_level_engineeranalyst_huntsville_al",
+    "nvidia_software_engineer_new_grad_-_physical_design_infrastructure_santa_clara_ca",
+    "uw_credit_union_software_engineer_1_madison_wi"
   ],
-  "last_updated": "2026-07-26T15:55:58.230496+00:00",
-  "total_posted": 17
+  "last_updated": "2026-07-27T16:53:05.931715+00:00",
+  "total_posted": 15
 }
