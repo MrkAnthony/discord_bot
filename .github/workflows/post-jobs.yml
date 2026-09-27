@@ -2,8 +2,9 @@ name: fetching-job-postings
 
 on:
   schedule:
-  # Runs at 11 AM, 3 PM, 7 PM, 11 PM EST (4:00 PM, 8:00 PM, 12:00 AM, 4:00 AM UTC)
-    - cron: '0 16,20,0,4 * * *'
+    # Runs at 9:30 AM, 11:30 AM, 3:30 PM, and 7:30 PM Eastern
+    - cron: '30 9,11,15,19 * * *'
+      timezone: 'America/New_York'
   workflow_dispatch:
 
 jobs:
